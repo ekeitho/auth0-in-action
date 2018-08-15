@@ -41,6 +41,7 @@
     "typescript": "^3.0.1"
   },
   "dependencies": {
+    "@types/auth0": "^2.9.4",
     "actions-on-google": "^2.3.0",
     "auth0": "^2.12.0"
   }

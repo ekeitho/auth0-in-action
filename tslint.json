@@ -1,3 +1,11 @@
 {
-  "extends": ["tslint:recommended", "tslint-config-prettier"]
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "rules": {
+    "interface-name": false,
+
+    // reason for this is that
+    // authy.test.ts 'AuthenticationClient()' breaks test, but 'AuthenticationClient: function()' works
+    "object-literal-shorthand": false,
+    "only-arrow-functions": false
+  }
 }

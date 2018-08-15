@@ -1,5 +1,4 @@
-const AuthenticationClient = require('auth0').AuthenticationClient;
-const ManagementClient = require('auth0').ManagementClient;
+import { AuthenticationClient, Identity, ManagementClient, User } from 'auth0';
 
 export class Authy {
 
@@ -21,19 +20,21 @@ export class Authy {
     this.clientSecret = clientSecret;
 
     this.auth0Client = new AuthenticationClient({
-      domain: this.applicationName + '.auth0.com',
       clientId: this.clientId,
       clientSecret: this.clientSecret,
+      domain: this.applicationName + '.auth0.com',
     });
 
   }
 
-  async getSocialIdentity<UserStorage>(token: string): Promise<SocialIdentity> {
-    if (!token) throw new Error('Failed to get access token from authentication flow');
+  public async getSocialIdentity<UserStorage>(token: string | undefined): Promise<SocialIdentity> {
+    if (!token || token.length === 0) {
+      throw new Error('Failed to get access token from authentication flow');
+    }
 
     const userDetail: PublicIdentity = await this.getPublicIdentity(token);
     const auth0ManagmentToken: string = await this.getAuth0ManagementToken();
-    const secureIdentity: SecureIdentity = await this.getSecureIdentity(userDetail, auth0ManagmentToken);
+    const secureIdentity: Identity = await this.getSecureIdentity(userDetail, auth0ManagmentToken);
     return {
       access_token: secureIdentity.access_token,
       username: userDetail.nickname,
@@ -63,13 +64,18 @@ export class Authy {
   // from the user profile we attained from the auth client and the
   // access token generated to talk to our protected auth0 server
   // we can now securely grab the access_token from the social partner
-  private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<SecureIdentity> {
+  private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
     const management = new ManagementClient({
-      token: auth0ManagementToken,
       domain: this.applicationName + '.auth0.com',
+      token: auth0ManagementToken,
     });
 
-    const socialUser = await management.getUser(userDetail.sub);
+    const socialUser : User = await management.getUser({id : userDetail.sub});
+
+    if (!socialUser.identities) {
+      throw new Error(`Failed to get back an identity from auth0 management with the id: ${userDetail.sub}`)
+    }
+
     return socialUser.identities[0];
   }
 
@@ -77,20 +83,13 @@ export class Authy {
 }
 
 export interface SocialIdentity {
-  access_token: string;
-  username: string;
-}
-
-export interface SecureIdentity {
-  access_token: string; // access token for client
-  provider: string; // such as 'google' or 'github'
-  user_id: number;
-  isSocial: boolean;
+  access_token: string | undefined;
+  username: string | undefined;
 }
 
 export interface PublicIdentity {
   sub: string; // the auth0 user id, which can be used in the management client
-  nickname: string;
   name: string;
-  picture: string; //
+  nickname: string | undefined;
+  picture: string | undefined;
 }
