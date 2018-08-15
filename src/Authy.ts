@@ -43,14 +43,14 @@ export class Authy {
   // when going through a successful authentication flow through google actions
   // we get back an access token, which verifies the user on our auth0 account
   // which is not the access token for the social media account!
-  getPublicIdentity(token: string): Promise<PublicIdentity> {
+  private async getPublicIdentity(token: string): Promise<PublicIdentity> {
     return this.auth0Client.getProfile(token);
   }
 
   // the users social auth token is on the protected server
   // but we need to get access to that server. so to talk to it later
   // we need an auth token to talk to it as well.
-  async getAuth0ManagementToken(): Promise<string> {
+  private async getAuth0ManagementToken(): Promise<string> {
     const auth = await this.auth0Client.clientCredentialsGrant(
       {
         audience: `https://${this.applicationName}.auth0.com/api/v2/`,
@@ -63,7 +63,7 @@ export class Authy {
   // from the user profile we attained from the auth client and the
   // access token generated to talk to our protected auth0 server
   // we can now securely grab the access_token from the social partner
-  async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<SecureIdentity> {
+  private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<SecureIdentity> {
     const management = new ManagementClient({
       token: auth0ManagementToken,
       domain: this.applicationName + '.auth0.com',

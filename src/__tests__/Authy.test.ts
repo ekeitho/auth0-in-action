@@ -21,7 +21,7 @@ jest.mock('auth0', () => {
           return {
             identities: [
               {
-                access_token: '',
+                access_token: 'aldbjf908dfl',
                 username: '',
               },
             ],
@@ -39,16 +39,29 @@ let authy = new Authy('appName',
   '0293r;alkjsdf');
 
 
-test('Test Authy', async () => {
+describe('Authy Tests', () => {
+  test('Test Facade', async () => {
+    const id = await authy.getSocialIdentity('token');
 
-  const spy = jest.spyOn(authy, 'getPublicIdentity');
-  await authy.getSocialIdentity('token');
+    expect(id).toEqual({
+      access_token: 'aldbjf908dfl',
+      username: 'ekeitho'
+    });
 
-  expect(spy).toReturnWith({
-    sub: '987654321',
-    nickname: 'ekeitho',
-    name: 'keith',
-    picture: 'img',
   });
 
+  test('Test Bad User Input - Undefined Access Token', async () => {
+    let error = undefined;
+
+    try {
+      // @ts-ignore - complains putting undefined as string
+      await authy.getSocialIdentity(error);
+    } catch (e) {
+      error = e;
+    } finally {
+      expect(error).toBeDefined();
+    }
+
+  });
 });
+
