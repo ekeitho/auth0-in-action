@@ -2,9 +2,15 @@
   "name": "auth0-in-action",
   "version": "1.0.0",
   "description": "build authenticated google actions faster",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --config jestconfig.json",
+    "prepublishOnly" : "npm test && npm run lint",
+    "preversion" : "npm run lint",
+    "version" : "npm run format && git add -A src",
+    "prepare" : "npm run build",
+    "postversion" : "git push && git push --tags",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json"
@@ -13,8 +19,8 @@
     "type": "git",
     "url": "git+https://github.com/ekeitho/auth0-in-action.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["auth0", "google actions"],
+  "author": "ekeitho",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/ekeitho/auth0-in-action/issues"
