@@ -11,20 +11,15 @@ jest.mock('auth0', () => {
           };
         },
         clientCredentialsGrant(options: any) {
-          return 'access_token'
+          return 'access_token';
         },
       };
     },
     ManagementClient: function() {
       return {
-        getUser(userId: string) {
+        getUser() {
           return {
-            identities: [
-              {
-                access_token: 'aldbjf908dfl',
-                username: '',
-              },
-            ],
+            identities: [{ access_token: 'aldbjf908dfl', username: '' }],
           };
         },
       };
@@ -35,24 +30,29 @@ jest.mock('auth0', () => {
 
 import { Authy } from '../Authy';
 
-const authy = new Authy('appName',
-  '093jlaksjdf',
-  '0293r;alkjsdf');
+let authy: Authy;
+
+beforeEach(() => {
+  authy = new Authy('appName',
+    '093jlaksjdf',
+    '0293r;alkjsdf');
+  jest.resetModules()
+});
+
 
 describe('Authy Tests', () => {
-
-
   test('Test Facade', async () => {
     const id = await authy.getSocialIdentity('token');
-
     expect(id).toEqual({
       access_token: 'aldbjf908dfl',
-      username: 'ekeitho'
+      username: 'ekeitho',
     });
-
   });
+});
 
-  test('Test Bad User Input - Undefined Access Token', async () => {
+describe('Test Authy Errors', () => {
+
+  test('Bad User Input - Undefined Access Token', async () => {
     let error;
 
     try {
@@ -64,5 +64,53 @@ describe('Authy Tests', () => {
     }
 
   });
+
+  test('Bad Server Input - Undefined Identity', async () => {
+
+    jest.doMock('auth0', () => {
+      return {
+        AuthenticationClient: function() {
+          return {
+            getProfile(token: string) {
+              return {
+                name: 'keith',
+                nickname: 'ekeitho',
+                picture: 'img',
+                sub: '987654321',
+              };
+            },
+            clientCredentialsGrant(options: any) {
+              return 'access_token';
+            },
+          };
+        },
+        ManagementClient: function() {
+          return {
+            getUser() {
+              return {
+                identities: undefined,
+              };
+            },
+          };
+        },
+      };
+    });
+    require('auth0');
+
+    let error;
+    authy = new Authy('appName',
+      '093jlaksjdf',
+      '0293r;alkjsdf');
+    try {
+
+      await authy.getSocialIdentity('dlkajdf');
+    } catch (e) {
+      error = e;
+    } finally {
+      expect(error).toBeDefined();
+    }
+
+  });
+
 });
 
