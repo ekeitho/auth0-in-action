@@ -27,7 +27,7 @@ export class Authy {
 
   }
 
-  public async getSocialIdentity<UserStorage>(token: string | undefined): Promise<SocialIdentity> {
+  public async getSocialIdentity<UserStorage>(token: string): Promise<SocialIdentity> {
     if (!token || token.length === 0) {
       throw new Error('Failed to get access token from authentication flow');
     }
@@ -39,6 +39,24 @@ export class Authy {
       access_token: secureIdentity.access_token,
       username: userDetail.nickname,
     };
+  }
+
+  // from the user profile we attained from the auth client and the
+  // access token generated to talk to our protected auth0 server
+  // we can now securely grab the access_token from the social partner
+  public async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
+    const management = new ManagementClient({
+      domain: this.applicationName + '.auth0.com',
+      token: auth0ManagementToken,
+    });
+
+    const socialUser: User = await management.getUser({ id: userDetail.sub });
+
+    if (!socialUser.identities) {
+      throw new Error(`Failed to get back an identity from auth0 management with the id: ${userDetail.sub}`);
+    }
+
+    return socialUser.identities[0];
   }
 
   // when going through a successful authentication flow through google actions
@@ -59,24 +77,6 @@ export class Authy {
       },
     );
     return auth.access_token;
-  }
-
-  // from the user profile we attained from the auth client and the
-  // access token generated to talk to our protected auth0 server
-  // we can now securely grab the access_token from the social partner
-  private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
-    const management = new ManagementClient({
-      domain: this.applicationName + '.auth0.com',
-      token: auth0ManagementToken,
-    });
-
-    const socialUser : User = await management.getUser({id : userDetail.sub});
-
-    if (!socialUser.identities) {
-      throw new Error(`Failed to get back an identity from auth0 management with the id: ${userDetail.sub}`)
-    }
-
-    return socialUser.identities[0];
   }
 
 

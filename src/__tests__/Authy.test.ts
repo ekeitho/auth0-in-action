@@ -1,6 +1,8 @@
+import auth0 = require('auth0');
+
 jest.mock('auth0', () => {
   return {
-    AuthenticationClient: function() {
+    AuthenticationClient: jest.fn().mockImplementation(() => {
       return {
         getProfile(token: string) {
           return {
@@ -14,8 +16,8 @@ jest.mock('auth0', () => {
           return 'access_token';
         },
       };
-    },
-    ManagementClient: function() {
+    }),
+    ManagementClient: jest.fn().mockImplementation(() => {
       return {
         getUser() {
           return {
@@ -23,21 +25,15 @@ jest.mock('auth0', () => {
           };
         },
       };
-    },
+    }),
   };
 });
 
 
 import { Authy } from '../Authy';
-
-let authy: Authy;
-
-beforeEach(() => {
-  authy = new Authy('appName',
-    '093jlaksjdf',
-    '0293r;alkjsdf');
-  jest.resetModules()
-});
+const authy = new Authy('appName',
+  '093jlaksjdf',
+  '0293r;alkjsdf');
 
 
 describe('Authy Tests', () => {
@@ -53,64 +49,44 @@ describe('Authy Tests', () => {
 describe('Test Authy Errors', () => {
 
   test('Bad User Input - Undefined Access Token', async () => {
-    let error;
-
-    try {
+    await expectToThrow(async () => {
+      // @ts-ignore
       await authy.getSocialIdentity(undefined);
-    } catch (e) {
-      error = e;
-    } finally {
-      expect(error).toBeDefined();
-    }
+    })
 
   });
 
   test('Bad Server Input - Undefined Identity', async () => {
-
-    jest.doMock('auth0', () => {
-      return {
-        AuthenticationClient: function() {
-          return {
-            getProfile(token: string) {
-              return {
-                name: 'keith',
-                nickname: 'ekeitho',
-                picture: 'img',
-                sub: '987654321',
-              };
-            },
-            clientCredentialsGrant(options: any) {
-              return 'access_token';
-            },
-          };
-        },
-        ManagementClient: function() {
-          return {
-            getUser() {
-              return {
-                identities: undefined,
-              };
-            },
-          };
-        },
-      };
+    // @ts-ignore - pre importing auth0 and then mocking makes ide
+    //              think that property 'mock...' doesn't exist on MClient
+    auth0.ManagementClient.mockImplementationOnce(() => {
+        return {
+          getUser: () => {
+            return {
+              identities: undefined,
+            };
+          }
+        }
     });
-    require('auth0');
 
-    let error;
-    authy = new Authy('appName',
-      '093jlaksjdf',
-      '0293r;alkjsdf');
-    try {
-
-      await authy.getSocialIdentity('dlkajdf');
-    } catch (e) {
-      error = e;
-    } finally {
-      expect(error).toBeDefined();
-    }
-
+    await expectToThrow(async () => {
+      await authy.getSocialIdentity('adsf')
+    })
   });
 
 });
+
+async function expectToThrow(cb: () => any) {
+  let error;
+
+  try {
+    await cb();
+  } catch(e) {
+    error = e;
+  } finally {
+    expect(error).toBeDefined();
+  }
+
+}
+
 
