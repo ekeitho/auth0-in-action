@@ -44,7 +44,7 @@ export class Authy {
   // from the user profile we attained from the auth client and the
   // access token generated to talk to our protected auth0 server
   // we can now securely grab the access_token from the social partner
-  public async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
+  private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
     const management = new ManagementClient({
       domain: this.applicationName + '.auth0.com',
       token: auth0ManagementToken,
