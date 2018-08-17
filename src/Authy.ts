@@ -27,7 +27,7 @@ export class Authy {
 
   }
 
-  public async getSocialIdentity<UserStorage>(token: string): Promise<SocialIdentity> {
+  public async getSocialIdentity(token: string): Promise<SocialIdentity> {
     if (!token || token.length === 0) {
       throw new Error('Failed to get access token from authentication flow');
     }
@@ -78,7 +78,6 @@ export class Authy {
     );
     return auth.access_token;
   }
-
 
 }
 
