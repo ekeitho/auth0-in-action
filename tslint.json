@@ -6,6 +6,7 @@
     // reason for this is that
     // authy.test.ts 'AuthenticationClient()' breaks test, but 'AuthenticationClient: function()' works
     "object-literal-shorthand": false,
-    "only-arrow-functions": false
+    "only-arrow-functions": false,
+    "max-classes-per-file": [true, 3]
   }
 }

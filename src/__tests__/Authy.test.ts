@@ -31,9 +31,11 @@ jest.mock('auth0', () => {
 
 
 import { Authy } from '../Authy';
-const authy = new Authy('appName',
-  '093jlaksjdf',
-  '0293r;alkjsdf');
+const authy = new Authy({
+  applicationName: '',
+  clientId: '',
+  clientSecret: ''
+});
 
 
 describe('Authy Tests', () => {

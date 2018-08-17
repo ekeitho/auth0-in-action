@@ -1,38 +1,53 @@
+import { Conversation } from 'actions-on-google';
 import { AuthenticationClient, Identity, ManagementClient, User } from 'auth0';
+import { AuthyError, ERR } from './error/error';
+import { ActionsInterceptor, ErrorInterceptor, ThrowInterceptor } from './error/interceptor';
 
-export class Authy {
+interface AuthyOptions<UserStorage> {
+  applicationName: string;
+  clientId: string;
+  clientSecret: string;
 
-  private readonly applicationName: string;
-  private readonly clientId: string;
-  private readonly clientSecret: string;
+  // debug feature,
+  conversation?: Conversation<UserStorage>;
+}
+
+export class Authy<UserStorage> {
 
   // no typing for auth0 currently
   private readonly auth0Client: any;
+  private readonly authyOptions: AuthyOptions<UserStorage>;
+  private readonly errorInterceptor: ErrorInterceptor;
 
-
-  constructor(
-    applicationName: string,
-    clientId: string,
-    clientSecret: string) {
-
-    this.applicationName = applicationName;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
+  constructor(authyOptions: AuthyOptions<UserStorage>) {
+    this.authyOptions = authyOptions;
 
     this.auth0Client = new AuthenticationClient({
-      clientId: this.clientId,
-      clientSecret: this.clientSecret,
-      domain: this.applicationName + '.auth0.com',
+      clientId: this.authyOptions.clientId,
+      clientSecret: this.authyOptions.clientSecret,
+      domain: this.authyOptions.applicationName + '.auth0.com',
     });
 
+    //
+    this.errorInterceptor =
+      !!this.authyOptions.conversation
+        ? new ActionsInterceptor(this.authyOptions.conversation)
+        : new ThrowInterceptor();
   }
 
-  public async getSocialIdentity<UserStorage>(token: string): Promise<SocialIdentity> {
+  public async getSocialIdentity(token: string): Promise<SocialIdentity> {
     if (!token || token.length === 0) {
-      throw new Error('Failed to get access token from authentication flow');
+      throw new Error(this.errorInterceptor.intercept(new AuthyError(ERR.BAD_ACCESS_TOKEN, [])));
     }
 
-    const userDetail: PublicIdentity = await this.getPublicIdentity(token);
+    let userDetail: PublicIdentity;
+    try {
+      userDetail = await this.getPublicIdentity(token);
+    } catch(err) {
+      console.log(err);
+      throw new Error(err);
+    }
+
     const auth0ManagmentToken: string = await this.getAuth0ManagementToken();
     const secureIdentity: Identity = await this.getSecureIdentity(userDetail, auth0ManagmentToken);
     return {
@@ -44,16 +59,16 @@ export class Authy {
   // from the user profile we attained from the auth client and the
   // access token generated to talk to our protected auth0 server
   // we can now securely grab the access_token from the social partner
-  public async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
+  private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
     const management = new ManagementClient({
-      domain: this.applicationName + '.auth0.com',
+      domain: this.authyOptions.applicationName + '.auth0.com',
       token: auth0ManagementToken,
     });
 
     const socialUser: User = await management.getUser({ id: userDetail.sub });
 
     if (!socialUser.identities) {
-      throw new Error(`Failed to get back an identity from auth0 management with the id: ${userDetail.sub}`);
+      throw new Error(this.errorInterceptor.intercept(new AuthyError(ERR.NO_SOCIAL_IDENTITY, [userDetail.sub])));
     }
 
     return socialUser.identities[0];
@@ -72,7 +87,7 @@ export class Authy {
   private async getAuth0ManagementToken(): Promise<string> {
     const auth = await this.auth0Client.clientCredentialsGrant(
       {
-        audience: `https://${this.applicationName}.auth0.com/api/v2/`,
+        audience: `https://${this.authyOptions.applicationName}.auth0.com/api/v2/`,
         scope: 'read:users',
       },
     );
