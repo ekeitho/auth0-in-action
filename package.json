@@ -1,6 +1,6 @@
 {
   "name": "auth0-in-action",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "build authenticated google actions faster",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -21,7 +21,8 @@
   },
   "keywords": [
     "auth0",
-    "google actions"
+    "google actions",
+    "actions on google"
   ],
   "author": "ekeitho",
   "license": "ISC",
