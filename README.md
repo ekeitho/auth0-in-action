@@ -25,7 +25,7 @@ app.intent('actions.intent.SIGN_IN', async (conv, params, signin) => {
         return conv.close('You need to sign in before using the app.');
     }
     
-    const authy = new Authy("yourAuth0ApplicationName", 
+    const authy = new Authy("yourAuth0TenantDomainName", 
                             "auth0clientId", 
                             "auth0clientSecret");
                             

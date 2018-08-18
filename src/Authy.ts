@@ -2,7 +2,7 @@ import { AuthenticationClient, Identity, ManagementClient, User } from 'auth0';
 
 export class Authy {
 
-  private readonly applicationName: string;
+  private readonly domainName: string;
   private readonly clientId: string;
   private readonly clientSecret: string;
 
@@ -11,18 +11,18 @@ export class Authy {
 
 
   constructor(
-    applicationName: string,
+    tenantDomainName: string,
     clientId: string,
     clientSecret: string) {
 
-    this.applicationName = applicationName;
+    this.domainName = tenantDomainName;
     this.clientId = clientId;
     this.clientSecret = clientSecret;
 
     this.auth0Client = new AuthenticationClient({
       clientId: this.clientId,
       clientSecret: this.clientSecret,
-      domain: this.applicationName + '.auth0.com',
+      domain: this.domainName + '.auth0.com',
     });
 
   }
@@ -46,7 +46,7 @@ export class Authy {
   // we can now securely grab the access_token from the social partner
   private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
     const management = new ManagementClient({
-      domain: this.applicationName + '.auth0.com',
+      domain: this.domainName + '.auth0.com',
       token: auth0ManagementToken,
     });
 
@@ -72,7 +72,7 @@ export class Authy {
   private async getAuth0ManagementToken(): Promise<string> {
     const auth = await this.auth0Client.clientCredentialsGrant(
       {
-        audience: `https://${this.applicationName}.auth0.com/api/v2/`,
+        audience: `https://${this.domainName}.auth0.com/api/v2/`,
         scope: 'read:users',
       },
     );
