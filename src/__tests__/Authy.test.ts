@@ -13,7 +13,7 @@ jest.mock('auth0', () => {
           };
         },
         clientCredentialsGrant(options: any) {
-          return 'access_token';
+          return 'oauth_token';
         },
       };
     }),
@@ -40,7 +40,7 @@ describe('Authy Tests', () => {
   test('Test Facade', async () => {
     const id = await authy.getSocialIdentity('token');
     expect(id).toEqual({
-      access_token: 'aldbjf908dfl',
+      oauth_token: 'aldbjf908dfl',
       username: 'ekeitho',
     });
   });

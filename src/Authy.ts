@@ -36,14 +36,14 @@ export class Authy {
     const auth0ManagmentToken: string = await this.getAuth0ManagementToken();
     const secureIdentity: Identity = await this.getSecureIdentity(userDetail, auth0ManagmentToken);
     return {
-      access_token: secureIdentity.access_token,
+      oauth_token: secureIdentity.access_token,
       username: userDetail.nickname,
     };
   }
 
   // from the user profile we attained from the auth client and the
   // access token generated to talk to our protected auth0 server
-  // we can now securely grab the access_token from the social partner
+  // we can now securely grab the oauth token from the social partner
   private async getSecureIdentity(userDetail: PublicIdentity, auth0ManagementToken: string): Promise<Identity> {
     const management = new ManagementClient({
       domain: this.domainName + '.auth0.com',
@@ -82,7 +82,7 @@ export class Authy {
 }
 
 export interface SocialIdentity {
-  access_token: string | undefined;
+  oauth_token: string | undefined;
   username: string | undefined;
 }
 
