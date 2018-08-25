@@ -5,16 +5,14 @@
 # auth0-in-action
 build authenticated google actions faster with [auth0](https://auth0.com)
 
-
-
 ### Why did I build this?
 
 There are a lot of great social integrations to be created on actions on google, 
 but working with authentication is a friction point in building out these ideas. 
 I want to help developers focus on building their awesome idea and avoid the potential 
-case of someone getting frustrated with the process and give up.
+case of someone getting frustrated with the process and give up. I wrote this [blog](https://medium.com/@ekeitho/setup-authenticated-actions-on-google-with-auth0-51748b29c2ed) to help you get started! 
 
-### How to use it!
+### How to use this library!
 
 ```typescript
 import Authy from 'auth0-in-action'
